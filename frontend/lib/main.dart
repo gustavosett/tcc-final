@@ -333,9 +333,14 @@ class SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text(
-        'Página de Pesquisa',
-        style: TextStyle(fontSize: 24),
+      child: Padding(
+        padding: EdgeInsets.all(64.0),
+        child: Text(
+          'Parece que esta página ainda não foi implementada. 😅',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,),
+        ),
       ),
     );
   }
@@ -1463,7 +1468,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               leading: const Icon(Icons.restaurant_menu),
                               title: Text('Reserva no $restaurantName'),
                               subtitle: Text(
-                                  'Às $formattedTime, dia $formattedDate, para seus ${book.peopleQuantity} convidados'),
+                                  'Às $formattedTime, dia $formattedDate, para ${book.peopleQuantity} pessoa(s)'),
                               onTap: () {
                                 // Ação ao tocar na reserva
                               },
