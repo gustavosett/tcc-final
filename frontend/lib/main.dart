@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert'; // Para conversão de JSON
-import 'package:shared_preferences/shared_preferences.dart'; // Para armazenamento local
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'MesApp',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.deepPurple,
+        colorSchemeSeed: Colors.black,
       ),
       home: const MyHomePage(title: 'MesApp'),
     );
@@ -201,19 +202,23 @@ class _HomePageState extends State<HomePage> {
 
     return RefreshIndicator(
       onRefresh: _refreshRestaurants,
-      child: ListView.builder(
+      child: GridView.builder(
         controller: _scrollController,
+        padding: const EdgeInsets.all(8.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // Número de colunas
+          childAspectRatio: 0.75, // Proporção largura/altura dos cards
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
         itemCount: restaurants.length + (hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == restaurants.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CircularProgressIndicator()),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           final restaurant = restaurants[index];
-          return RestaurantListItem(
+          return RestaurantCard(
             restaurant: restaurant,
             onTap: () {
               Navigator.push(
@@ -226,6 +231,97 @@ class _HomePageState extends State<HomePage> {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class RestaurantCard extends StatelessWidget {
+  final Restaurant restaurant;
+  final VoidCallback onTap;
+
+  const RestaurantCard({
+    Key? key,
+    required this.restaurant,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 4,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Imagem do Restaurante
+            Expanded(
+              child: CachedNetworkImage(
+                imageUrl: restaurant.image.isNotEmpty
+                    ? restaurant.image
+                    : 'https://via.placeholder.com/150',
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.restaurant, color: Colors.grey, size: 80),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nome do Restaurante
+                  Text(
+                    restaurant.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Avaliação e Endereço
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text('${restaurant.rating}'),
+                      const Spacer(),
+                      const Icon(Icons.location_on, size: 16),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          restaurant.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Descrição
+                  Text(
+                    restaurant.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -439,7 +535,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
   }
 
-  void _onScheduleButtonPressed() {
+  void _onReserveButtonPressed() {
     if (accessToken != null) {
       Navigator.push(
         context,
@@ -460,9 +556,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Carregando...'),
-        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -484,143 +577,182 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     final restaurant = restaurantDetails!;
 
     return Scaffold(
+      extendBodyBehindAppBar: true, // Permite que o corpo fique atrás da AppBar
       appBar: AppBar(
-        title: Text(restaurant.name),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Colors.transparent, // Transparente para sobrepor a imagem
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white), // Ícones brancos
       ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CachedNetworkImage(
-              imageUrl: restaurant.image.isNotEmpty
-                  ? restaurant.image
-                  : 'https://via.placeholder.com/600x200',
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                width: double.infinity,
-                height: 200,
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, url, error) => Container(
-                width: double.infinity,
-                height: 200,
-                color: Colors.grey[300],
-                child: const Icon(Icons.restaurant, color: Colors.grey, size: 100),
-              ),
+            // Imagem de Capa
+            Stack(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: restaurant.image.isNotEmpty
+                      ? restaurant.image
+                      : 'https://via.placeholder.com/600x400',
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    width: double.infinity,
+                    height: 300,
+                    color: Colors.grey[200],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    width: double.infinity,
+                    height: 300,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant, color: Colors.grey, size: 100),
+                  ),
+                ),
+                // Gradiente para melhorar a legibilidade do texto
+                Container(
+                  width: double.infinity,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.6),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+                // Informações do Restaurante na Imagem
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: Text(
+                    restaurant.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          offset: Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
+            // Informações Básicas
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    restaurant.name,
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    restaurant.description,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
+                  // Avaliação e Tipo de Culinária
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16),
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 4),
-                      Text(restaurant.address),
+                      Text(
+                        '${restaurant.rating}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 16),
+                      // Tipo de Culinária (se disponível)
+                      if (restaurant.description.isNotEmpty)
+                        Row(
+                          children: [
+                            const Icon(Icons.restaurant_menu, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              restaurant.description,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+                  // Endereço
                   Row(
                     children: [
-                      const Icon(Icons.phone, size: 16),
+                      const Icon(Icons.location_on, size: 20),
                       const SizedBox(width: 4),
-                      Text(restaurant.phone),
+                      Expanded(
+                        child: Text(
+                          restaurant.address,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+                  // Telefone
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const Icon(Icons.phone, size: 20),
                       const SizedBox(width: 4),
-                      Text('${restaurant.rating}'),
+                      Text(
+                        restaurant.phone,
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Botão de Reserva
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _onScheduleButtonPressed,
-                      child: const Text('Agendar'),
+                      onPressed: _onReserveButtonPressed,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 18),
+                      ),
+                      child: const Text('Reserve Agora'),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  // Galeria de Pratos
                   const Text(
-                    'Itens do Menu',
-                    style: TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                    'Conheça nossos pratos',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   restaurant.items.isEmpty
                       ? const Text('Nenhum item disponível.')
                       : SizedBox(
-                          height: 120,
+                          height: 220,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: restaurant.items.length,
                             itemBuilder: (context, index) {
                               final item = restaurant.items[index];
                               return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Column(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: CachedNetworkImage(
-                                        imageUrl: item.image.isNotEmpty
-                                            ? item.image
-                                            : 'https://via.placeholder.com/80',
-                                        width: 80,
-                                        height: 80,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[200],
-                                          child: const Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                        ),
-                                        errorWidget:
-                                            (context, url, error) => Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[300],
-                                          child: const Icon(Icons.fastfood,
-                                              color: Colors.grey),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.title,
-                                      style: const TextStyle(fontSize: 14),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
+                                padding: const EdgeInsets.only(right: 16.0),
+                                child: DishCard(item: item),
                               );
                             },
                           ),
                         ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  // Descrição Detalhada
+                  const Text(
+                    'Sobre o Restaurante',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    restaurant.description,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -631,91 +763,64 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 }
 
-class RestaurantListItem extends StatelessWidget {
-  final Restaurant restaurant;
-  final VoidCallback onTap;
+class DishCard extends StatelessWidget {
+  final Item item;
 
-  const RestaurantListItem({
-    Key? key,
-    required this.restaurant,
-    required this.onTap,
-  }) : super(key: key);
+  const DishCard({Key? key, required this.item}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              // Imagem do Restaurante
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: restaurant.image.isNotEmpty
-                      ? restaurant.image
-                      : 'https://via.placeholder.com/60',
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey[200],
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant, color: Colors.grey),
-                  ),
+    return GestureDetector(
+      onTap: () {
+        // Ação ao tocar no prato (pode exibir detalhes do prato)
+      },
+      child: Container(
+        width: 160,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Imagem do Prato
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(
+                imageUrl: item.image.isNotEmpty
+                    ? item.image
+                    : 'https://via.placeholder.com/150',
+                width: 160,
+                height: 120,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  width: 160,
+                  height: 120,
+                  color: Colors.grey[200],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 160,
+                  height: 120,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.fastfood, color: Colors.grey, size: 50),
                 ),
               ),
-              const SizedBox(width: 8),
-              // Informações do Restaurante
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Nome do Restaurante
-                    Text(
-                      restaurant.name.isNotEmpty
-                          ? restaurant.name
-                          : 'Sem Nome',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Descrição do Restaurante
-                    Text(
-                      restaurant.description.isNotEmpty
-                          ? restaurant.description
-                          : 'Sem Descrição',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    // Avaliação do Restaurante
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text('${restaurant.rating}'),
-                      ],
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 8),
+            // Nome do Prato
+            Text(
+              item.title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 4),
+            // Descrição do Prato
+            Text(
+              item.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
         ),
       ),
     );
@@ -767,10 +872,55 @@ class BookingPage extends StatefulWidget {
 
 class _BookingPageState extends State<BookingPage> {
   final _formKey = GlobalKey<FormState>();
-  int _peopleQuantity = 1;
+  int _peopleQuantity = 2;
   DateTime? _reservedFor;
   bool isLoading = false;
   String? errorMessage;
+  Restaurant? restaurantDetails;
+  String? accessToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessToken();
+    _fetchRestaurantDetails();
+  }
+
+  Future<void> _loadAccessToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      accessToken = prefs.getString('access_token');
+    });
+  }
+
+  Future<void> _fetchRestaurantDetails() async {
+    final url = '${MyApp.urlBackend}/api/v1/restaurants/${widget.restaurantId}';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'accept': 'application/json',
+          if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          restaurantDetails = Restaurant.fromJson(responseData);
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Erro ao carregar detalhes do restaurante.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erro de rede. Verifique sua conexão.';
+      });
+    }
+  }
 
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
@@ -830,7 +980,7 @@ class _BookingPageState extends State<BookingPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Reserva realizada com sucesso!')),
           );
-          Navigator.pop(context);
+          Navigator.popUntil(context, (route) => route.isFirst);
         }
       } else {
         setState(() {
@@ -858,7 +1008,7 @@ class _BookingPageState extends State<BookingPage> {
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(now),
+        initialTime: TimeOfDay(hour: 19, minute: 0),
       );
 
       if (pickedTime != null) {
@@ -877,71 +1027,168 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (restaurantDetails == null) {
+      return Scaffold(
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Agendar Reserva'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      initialValue: _peopleQuantity.toString(),
-                      decoration: const InputDecoration(
-                        labelText: 'Quantidade de Pessoas',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor, insira a quantidade de pessoas.';
-                        }
-                        int? quantity = int.tryParse(value);
-                        if (quantity == null || quantity <= 0) {
-                          return 'Quantidade inválida.';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          _peopleQuantity = int.tryParse(value) ?? 1;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _reservedFor == null
-                                ? 'Data e Hora não selecionadas'
-                                : 'Reservado para: ${_reservedFor!.toLocal()}',
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: _selectDateTime,
-                          child: const Text('Selecionar Data e Hora'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (errorMessage != null)
-                      Text(
-                        errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _submitBooking,
-                      child: const Text('Confirmar Reserva'),
-                    ),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          // Imagem de Fundo
+          CachedNetworkImage(
+            imageUrl: restaurantDetails!.image.isNotEmpty
+                ? restaurantDetails!.image
+                : 'https://via.placeholder.com/600x800',
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.grey[200],
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            errorWidget: (context, url, error) => Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.grey[300],
+              child: const Icon(Icons.restaurant, color: Colors.grey, size: 100),
+            ),
+          ),
+          // Gradiente
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withOpacity(0.6),
+                  Colors.black.withOpacity(0.6),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
+            ),
+          ),
+          // Conteúdo
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nome do Restaurante
+                  Text(
+                    'Reservar em ${restaurantDetails!.name}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Formulário de Reserva
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          // Seleção de Data e Hora
+                          GestureDetector(
+                            onTap: _selectDateTime,
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: _reservedFor == null
+                                      ? 'Data e Hora'
+                                      : 'Reservado para',
+                                  hintText: _reservedFor == null
+                                      ? 'Selecione a data e hora'
+                                      : DateFormat('dd/MM/yyyy HH:mm')
+                                          .format(_reservedFor!),
+                                  prefixIcon:
+                                      const Icon(Icons.calendar_today_outlined),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (_reservedFor == null) {
+                                    return 'Por favor, selecione a data e hora.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Seleção de Quantidade de Pessoas
+                          TextFormField(
+                            initialValue: _peopleQuantity.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Quantidade de Pessoas',
+                              prefixIcon: Icon(Icons.people_outline),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Por favor, insira a quantidade de pessoas.';
+                              }
+                              int? quantity = int.tryParse(value);
+                              if (quantity == null || quantity <= 0) {
+                                return 'Quantidade inválida.';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              setState(() {
+                                _peopleQuantity = int.tryParse(value) ?? 1;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          // Mensagem de Erro
+                          if (errorMessage != null)
+                            Text(
+                              errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          const SizedBox(height: 16),
+                          // Botão de Confirmar Reserva
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _submitBooking,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                textStyle: const TextStyle(fontSize: 18),
+                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text('Confirmar Reserva'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -972,7 +1219,7 @@ class PaymentPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Sua reserva para ${book.peopleQuantity} pessoas em ${book.reservedFor.toLocal()} requer pagamento.',
+              'Sua reserva para ${book.peopleQuantity} pessoas em ${DateFormat('dd/MM/yyyy HH:mm').format(book.reservedFor.toLocal())} requer pagamento.',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -1008,6 +1255,9 @@ class _ProfilePageState extends State<ProfilePage> {
   User? user;
   bool isLoading = true;
   String? errorMessage;
+
+  // Mapa para armazenar nomes de restaurantes com base no ID
+  Map<String, String> restaurantNames = {};
 
   @override
   void initState() {
@@ -1058,6 +1308,10 @@ class _ProfilePageState extends State<ProfilePage> {
           User parsedUser = User.fromJson(responseData);
           setState(() {
             user = parsedUser;
+          });
+          // Após obter o usuário, busque os nomes dos restaurantes das reservas futuras
+          await _fetchRestaurantNamesForBookings();
+          setState(() {
             isLoading = false;
           });
         } catch (e) {
@@ -1080,6 +1334,43 @@ class _ProfilePageState extends State<ProfilePage> {
         errorMessage = 'Erro de rede. Tente novamente mais tarde.';
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _fetchRestaurantNamesForBookings() async {
+    if (user == null || user!.books.isEmpty) return;
+
+    // Filtrar reservas futuras
+    List<Book> futureBookings = user!.books
+        .where((book) => book.reservedFor.isAfter(DateTime.now()))
+        .toList();
+
+    // Obter IDs únicos dos restaurantes das reservas futuras
+    Set<String> restaurantIds =
+        futureBookings.map((book) => book.restaurantId).toSet();
+
+    for (String restaurantId in restaurantIds) {
+      final url = '${MyApp.urlBackend}/api/v1/restaurants/$restaurantId';
+
+      try {
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'accept': 'application/json',
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          Restaurant restaurant = Restaurant.fromJson(responseData);
+          restaurantNames[restaurantId] = restaurant.name;
+        } else {
+          restaurantNames[restaurantId] = 'Restaurante Desconhecido';
+        }
+      } catch (e) {
+        restaurantNames[restaurantId] = 'Restaurante Desconhecido';
+      }
     }
   }
 
@@ -1124,6 +1415,16 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
+    // Extrair o primeiro nome
+    String firstName = user!.fullName != null && user!.fullName!.isNotEmpty
+        ? user!.fullName!.split(' ')[0]
+        : 'Usuário';
+
+    // Filtrar reservas futuras
+    List<Book> futureBookings = user!.books
+        .where((book) => book.reservedFor.isAfter(DateTime.now()))
+        .toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: user == null
@@ -1131,26 +1432,50 @@ class _ProfilePageState extends State<ProfilePage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Informações Básicas do Usuário
+                // Saudação Simplificada
                 Text(
-                  'Nome: ${user!.fullName ?? 'Não fornecido'}',
-                  style: const TextStyle(fontSize: 20),
+                  'Olá, $firstName!',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                // Lista de Reservas Futuras
+                const Text(
+                  'Suas Próximas Reservas',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Email: ${user!.email}',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'CPF: ${user!.cpf}',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(height: 16),
+                futureBookings.isEmpty
+                    ? const Text('Você não possui reservas futuras.')
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: futureBookings.length,
+                        itemBuilder: (context, index) {
+                          final book = futureBookings[index];
+                          String restaurantName = restaurantNames[book.restaurantId] ?? 'Restaurante';
+
+                          // Formatar data e hora
+                          String formattedDate = DateFormat('dd/MM/yyyy').format(book.reservedFor.toLocal());
+                          String formattedTime = DateFormat('HH:mm').format(book.reservedFor.toLocal());
+
+                          return Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.restaurant_menu),
+                              title: Text('Reserva no $restaurantName'),
+                              subtitle: Text(
+                                  'Às $formattedTime, dia $formattedDate, para seus ${book.peopleQuantity} convidados'),
+                              onTap: () {
+                                // Ação ao tocar na reserva
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                const SizedBox(height: 32),
                 // Lista de Restaurantes
                 const Text(
                   'Seus Restaurantes',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 user!.restaurants.isEmpty
@@ -1174,8 +1499,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   width: 50,
                                   height: 50,
                                   color: Colors.grey[200],
-                                  child: const Center(
-                                      child: CircularProgressIndicator()),
+                                  child:
+                                      const Center(child: CircularProgressIndicator()),
                                 ),
                                 errorWidget: (context, url, error) =>
                                     const Icon(Icons.restaurant),
@@ -1184,43 +1509,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               subtitle: Text(restaurant.description),
                               onTap: () {
                                 // Ação ao tocar no restaurante
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                const SizedBox(height: 32),
-                // Lista de Reservas
-                const Text(
-                  'Suas Reservas',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                user!.books.isEmpty
-                    ? const Text('Você ainda não possui reservas.')
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: user!.books.length,
-                        itemBuilder: (context, index) {
-                          final book = user!.books[index];
-                          return Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.book_online),
-                              title: Text('Reserva ID: ${book.id}'),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Restaurante ID: ${book.restaurantId}'),
-                                  Text('Pessoas: ${book.peopleQuantity}'),
-                                  Text(
-                                      'Reservado para: ${book.reservedFor.toLocal()}'),
-                                  Text(
-                                      'Ativa: ${book.active ? 'Sim' : 'Não'}'),
-                                ],
-                              ),
-                              onTap: () {
-                                // Ação ao tocar na reserva
                               },
                             ),
                           );
@@ -1268,8 +1556,8 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return showLogin
-        ? LoginForm(toggleForm: toggleForm)
-        : SignupForm(toggleForm: toggleForm);
+        ? SignupForm(toggleForm: toggleForm)
+        : LoginForm(toggleForm: toggleForm);
   }
 }
 
