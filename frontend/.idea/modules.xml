@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/frontend.iml" filepath="$PROJECT_DIR$/.idea/frontend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tcc.iml" filepath="$PROJECT_DIR$/tcc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/tcc_android.iml" filepath="$PROJECT_DIR$/android/tcc_android.iml" />
     </modules>
   </component>
 </project>
