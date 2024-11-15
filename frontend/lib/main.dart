@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart'; // Para armazenamen
 import 'package:cached_network_image/cached_network_image.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Certifique-se de que isso está presente
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -17,12 +17,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter com Autenticação e Perfil',
+      title: 'MesApp',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        colorSchemeSeed: Colors.deepPurple,
       ),
-      home: const MyHomePage(title: 'Página Inicial'),
+      home: const MyHomePage(title: 'MesApp'),
     );
   }
 }
@@ -34,20 +34,6 @@ class MyHomePage extends StatefulWidget {
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class HomePlaceholderPage extends StatelessWidget {
-  const HomePlaceholderPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Página Home',
-        style: TextStyle(fontSize: 24),
-      ),
-    );
-  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -65,32 +51,38 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  final List<String> _titles = ['Início', 'Pesquisa', 'Perfil'];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(_titles[_selectedIndex]),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        elevation: 0,
       ),
       body: _pages.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        destinations: const <NavigationDestination>[
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
             label: 'Início',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+          NavigationDestination(
+            icon: Icon(Icons.search_outlined),
+            selectedIcon: Icon(Icons.search),
             label: 'Pesquisa',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Perfil',
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepPurple,
-        onTap: _onItemTapped,
       ),
     );
   }
@@ -214,7 +206,6 @@ class _HomePageState extends State<HomePage> {
         itemCount: restaurants.length + (hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == restaurants.length) {
-            // Exibe o indicador de carregamento no final da lista
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(child: CircularProgressIndicator()),
@@ -225,7 +216,6 @@ class _HomePageState extends State<HomePage> {
           return RestaurantListItem(
             restaurant: restaurant,
             onTap: () {
-              // Navegar para a página de detalhes do restaurante
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -241,7 +231,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Página de Pesquisa
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
 
@@ -289,7 +278,6 @@ class Item {
     );
   }
 }
-
 
 class User {
   final String email;
@@ -386,7 +374,8 @@ class Restaurant {
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  const RestaurantDetailPage({Key? key, required this.restaurant}) : super(key: key);
+  const RestaurantDetailPage({Key? key, required this.restaurant})
+      : super(key: key);
 
   @override
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
@@ -413,7 +402,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Future<void> _fetchRestaurantDetails() async {
-    final url = '${MyApp.urlBackend}/api/v1/restaurants/${widget.restaurant.id}';
+    final url =
+        '${MyApp.urlBackend}/api/v1/restaurants/${widget.restaurant.id}';
 
     try {
       final response = await http.get(
@@ -451,15 +441,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
   void _onScheduleButtonPressed() {
     if (accessToken != null) {
-      // Usuário está logado, navegar para a página de agendamento
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => BookingPage(restaurantId: widget.restaurant.id),
+          builder: (context) =>
+              BookingPage(restaurantId: widget.restaurant.id),
         ),
       );
     } else {
-      // Usuário não está logado, navegar para a página de login
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -497,12 +486,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(restaurant.name),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Imagem Grande do Restaurante usando CachedNetworkImage
             CachedNetworkImage(
               imageUrl: restaurant.image.isNotEmpty
                   ? restaurant.image
@@ -524,7 +512,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // Informações Básicas
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
@@ -532,7 +519,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 children: [
                   Text(
                     restaurant.name,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -564,7 +552,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Botão de Agendar
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -573,10 +560,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Lista de Itens (Menu)
                   const Text(
                     'Itens do Menu',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   restaurant.items.isEmpty
@@ -601,13 +588,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                                         width: 80,
                                         height: 80,
                                         fit: BoxFit.cover,
-                                        placeholder: (context, url) => Container(
+                                        placeholder: (context, url) =>
+                                            Container(
                                           width: 80,
                                           height: 80,
                                           color: Colors.grey[200],
-                                          child: const Center(child: CircularProgressIndicator()),
+                                          child: const Center(
+                                              child:
+                                                  CircularProgressIndicator()),
                                         ),
-                                        errorWidget: (context, url, error) => Container(
+                                        errorWidget:
+                                            (context, url, error) => Container(
                                           width: 80,
                                           height: 80,
                                           color: Colors.grey[300],
@@ -640,9 +631,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 }
 
-
-
-
 class RestaurantListItem extends StatelessWidget {
   final Restaurant restaurant;
   final VoidCallback onTap;
@@ -657,8 +645,10 @@ class RestaurantListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -666,19 +656,25 @@ class RestaurantListItem extends StatelessWidget {
               // Imagem do Restaurante
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  restaurant.image.isNotEmpty ? restaurant.image : 'https://via.placeholder.com/60',
+                child: CachedNetworkImage(
+                  imageUrl: restaurant.image.isNotEmpty
+                      ? restaurant.image
+                      : 'https://via.placeholder.com/60',
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 60,
-                      height: 60,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.restaurant, color: Colors.grey),
-                    );
-                  },
+                  placeholder: (context, url) => Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant, color: Colors.grey),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -689,7 +685,9 @@ class RestaurantListItem extends StatelessWidget {
                   children: [
                     // Nome do Restaurante
                     Text(
-                      restaurant.name.isNotEmpty ? restaurant.name : 'Sem Nome',
+                      restaurant.name.isNotEmpty
+                          ? restaurant.name
+                          : 'Sem Nome',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -698,7 +696,9 @@ class RestaurantListItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     // Descrição do Restaurante
                     Text(
-                      restaurant.description.isNotEmpty ? restaurant.description : 'Sem Descrição',
+                      restaurant.description.isNotEmpty
+                          ? restaurant.description
+                          : 'Sem Descrição',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -721,8 +721,6 @@ class RestaurantListItem extends StatelessWidget {
     );
   }
 }
-
-
 
 class Book {
   final String restaurantId;
@@ -747,11 +745,13 @@ class Book {
     return Book(
       restaurantId: json['restaurant_id'] ?? '',
       peopleQuantity: json['people_quantity'] ?? 0,
-      reservedFor: DateTime.tryParse(json['reserved_for'] ?? '') ?? DateTime.now(),
+      reservedFor:
+          DateTime.tryParse(json['reserved_for'] ?? '') ?? DateTime.now(),
       id: json['id'] ?? '',
       ownerId: json['owner_id'] ?? '',
       active: json['active'] ?? false,
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -791,7 +791,6 @@ class _BookingPageState extends State<BookingPage> {
     String? accessToken = prefs.getString('access_token');
 
     if (accessToken == null) {
-      // Usuário não está logado, redirecionar para login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -823,17 +822,15 @@ class _BookingPageState extends State<BookingPage> {
         Book newBook = Book.fromJson(responseData);
 
         if (!newBook.active) {
-          // Reserva não está ativa, redirecionar para a página de pagamento
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => PaymentPage(book: newBook)),
           );
         } else {
-          // Reserva ativa, mostrar confirmação
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Reserva realizada com sucesso!')),
           );
-          Navigator.pop(context); // Volta para a página de detalhes do restaurante
+          Navigator.pop(context);
         }
       } else {
         setState(() {
@@ -883,7 +880,7 @@ class _BookingPageState extends State<BookingPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Agendar Reserva'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -893,7 +890,6 @@ class _BookingPageState extends State<BookingPage> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Campo para selecionar a quantidade de pessoas
                     TextFormField(
                       initialValue: _peopleQuantity.toString(),
                       decoration: const InputDecoration(
@@ -917,7 +913,6 @@ class _BookingPageState extends State<BookingPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Botão para selecionar a data e hora
                     Row(
                       children: [
                         Expanded(
@@ -934,14 +929,12 @@ class _BookingPageState extends State<BookingPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Mensagem de erro
                     if (errorMessage != null)
                       Text(
                         errorMessage!,
                         style: const TextStyle(color: Colors.red),
                       ),
                     const SizedBox(height: 16),
-                    // Botão para enviar a reserva
                     ElevatedButton(
                       onPressed: _submitBooking,
                       child: const Text('Confirmar Reserva'),
@@ -953,7 +946,6 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 }
-
 
 class PaymentPage extends StatelessWidget {
   final Book book;
@@ -968,7 +960,7 @@ class PaymentPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pagamento'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -1004,8 +996,6 @@ class PaymentPage extends StatelessWidget {
   }
 }
 
-
-// Página de Perfil
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -1064,7 +1054,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        // Envolva a conversão em um try-catch interno
         try {
           User parsedUser = User.fromJson(responseData);
           setState(() {
@@ -1078,7 +1067,6 @@ class _ProfilePageState extends State<ProfilePage> {
           });
         }
       } else {
-        // Token inválido ou usuário não autenticado
         setState(() {
           errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
           isLoading = false;
@@ -1107,17 +1095,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      // Exibe um indicador de carregamento enquanto busca os dados
       return const Center(child: CircularProgressIndicator());
     }
 
     if (accessToken == null) {
-      // Se não estiver logado, exibe a página de autenticação
       return const AuthPage();
     }
 
     if (errorMessage != null) {
-      // Exibe a mensagem de erro
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1139,7 +1124,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    // Se estiver logado e os dados do usuário foram carregados
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: user == null
@@ -1179,19 +1163,27 @@ class _ProfilePageState extends State<ProfilePage> {
                           final restaurant = user!.restaurants[index];
                           return Card(
                             child: ListTile(
-                              leading: Image.network(
-                                restaurant.image,
+                              leading: CachedNetworkImage(
+                                imageUrl: restaurant.image.isNotEmpty
+                                    ? restaurant.image
+                                    : 'https://via.placeholder.com/50',
                                 width: 50,
                                 height: 50,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.restaurant);
-                                },
+                                placeholder: (context, url) => Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                      child: CircularProgressIndicator()),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.restaurant),
                               ),
                               title: Text(restaurant.name),
                               subtitle: Text(restaurant.description),
                               onTap: () {
-                                // Ação ao tocar no restaurante (pode navegar para detalhes)
+                                // Ação ao tocar no restaurante
                               },
                             ),
                           );
@@ -1219,10 +1211,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                      'Restaurante ID: ${book.restaurantId}'), // Você pode mapear para o nome do restaurante se tiver essa informação
-                                  Text(
-                                      'Pessoas: ${book.peopleQuantity}'),
+                                  Text('Restaurante ID: ${book.restaurantId}'),
+                                  Text('Pessoas: ${book.peopleQuantity}'),
                                   Text(
                                       'Reservado para: ${book.reservedFor.toLocal()}'),
                                   Text(
@@ -1230,7 +1220,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ],
                               ),
                               onTap: () {
-                                // Ação ao tocar na reserva (pode navegar para detalhes)
+                                // Ação ao tocar na reserva
                               },
                             ),
                           );
@@ -1247,8 +1237,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: const Text(
                       'Logout',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold, // Torna o texto em negrito
-                        color: Colors.white, // Define a cor do texto como branco
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -1259,7 +1249,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// Página de Autenticação (Registro e Login)
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
 
@@ -1278,11 +1267,12 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    return showLogin ? LoginForm(toggleForm: toggleForm) : SignupForm(toggleForm: toggleForm);
+    return showLogin
+        ? LoginForm(toggleForm: toggleForm)
+        : SignupForm(toggleForm: toggleForm);
   }
 }
 
-// Formulário de Registro
 class SignupForm extends StatefulWidget {
   final VoidCallback toggleForm;
 
@@ -1315,7 +1305,8 @@ class _SignupFormState extends State<SignupForm> {
     final body = jsonEncode({
       'email': _emailController.text,
       'password': _passwordController.text,
-      'full_name': _fullNameController.text.isEmpty ? null : _fullNameController.text,
+      'full_name':
+          _fullNameController.text.isEmpty ? null : _fullNameController.text,
       'cpf': _cpfController.text,
     });
 
@@ -1327,7 +1318,6 @@ class _SignupFormState extends State<SignupForm> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Registro bem-sucedido, alternar para o formulário de login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registro realizado com sucesso!')),
         );
@@ -1356,15 +1346,14 @@ class _SignupFormState extends State<SignupForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Registro'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
-              'Registro',
-              style: TextStyle(fontSize: 32),
-            ),
-            const SizedBox(height: 16),
             if (errorMessage != null)
               Text(
                 errorMessage!,
@@ -1384,7 +1373,8 @@ class _SignupFormState extends State<SignupForm> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu email';
                       }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
                         return 'Por favor, insira um email válido';
                       }
                       return null;
@@ -1410,11 +1400,8 @@ class _SignupFormState extends State<SignupForm> {
                   // Campo de Nome Completo
                   TextFormField(
                     controller: _fullNameController,
-                    decoration: const InputDecoration(labelText: 'Nome Completo'),
-                    validator: (value) {
-                      // Nome completo pode ser opcional, dependendo da API
-                      return null;
-                    },
+                    decoration:
+                        const InputDecoration(labelText: 'Nome Completo'),
                   ),
                   const SizedBox(height: 8),
                   // Campo de CPF
@@ -1450,12 +1437,11 @@ class _SignupFormState extends State<SignupForm> {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }
 
-// Formulário de Login
 class LoginForm extends StatefulWidget {
   final VoidCallback toggleForm;
 
@@ -1499,16 +1485,13 @@ class _LoginFormState extends State<LoginForm> {
         final responseData = jsonDecode(response.body);
         String accessToken = responseData['access_token'];
 
-        // Armazena o token
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', accessToken);
 
-        // Atualiza o estado para refletir o login
         setState(() {
           isLoading = false;
         });
 
-        // Redefine a página para que o ProfilePage seja reconstruído com os novos dados
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MyHomePage(title: 'MesApp')),
         );
@@ -1535,15 +1518,14 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Login'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
-              'Login',
-              style: TextStyle(fontSize: 32),
-            ),
-            const SizedBox(height: 16),
             if (errorMessage != null)
               Text(
                 errorMessage!,
@@ -1563,7 +1545,8 @@ class _LoginFormState extends State<LoginForm> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu email';
                       }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
                         return 'Por favor, insira um email válido';
                       }
                       return null;
@@ -1600,7 +1583,7 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }
