@@ -123,10 +123,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   List<Restaurant> restaurants = [];
   int skip = 0;
   final int limit = 10;
@@ -135,27 +135,10 @@ class _HomePageState extends State<HomePage> {
   bool isInitialLoading = true;
   String? errorMessage;
 
-  final ScrollController _scrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
     _fetchRestaurants();
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !isLoading &&
-          hasMore) {
-        _fetchRestaurants();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchRestaurants() async {
@@ -230,37 +213,54 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _refreshRestaurants,
-      child: GridView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(8.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Número de colunas
-          childAspectRatio: 0.75, // Proporção largura/altura dos cards
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-        ),
-        itemCount: restaurants.length + (hasMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == restaurants.length) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final restaurant = restaurants[index];
-          return RestaurantCard(
-            restaurant: restaurant,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      RestaurantDetailPage(restaurant: restaurant),
+  return RefreshIndicator(
+    onRefresh: _refreshRestaurants,
+    child: NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (!isLoading &&
+            hasMore &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200) {
+          _fetchRestaurants();
+        }
+        return false;
+      },
+        child: Column(
+          children: [
+            Expanded(
+              child: GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                 ),
-              );
-            },
-          );
-        },
+                itemCount: restaurants.length + (hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == restaurants.length) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+              
+                  final restaurant = restaurants[index];
+                  return RestaurantCard(
+                    restaurant: restaurant,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              RestaurantDetailPage(restaurant: restaurant),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
