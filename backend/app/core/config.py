@@ -80,9 +80,10 @@ class Settings(BaseSettings):
     
 
     # EFIPAY
-    EFIPAY_CLIENT_ID: str| None = None
-    EFIPAY_CLIENT_SECRET: str| None = None
-    EFIPAY_CERTIFICATE_PATH: str| None = None
+    EFIPAY_CLIENT_ID: str
+    EFIPAY_CLIENT_SECRET: str
+    EFIPAY_CERTIFICATE_PATH: str
+    EFIPAY_EVP_KEY: str
 
     @model_validator(mode="after")
     def _set_default_emails_from(self) -> Self:
