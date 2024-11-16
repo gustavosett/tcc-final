@@ -54,6 +54,10 @@ def read_payment(
     payment = session.get(Payment, id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
+    book = session.get(Book, payment.book_id)
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
 
     if not current_user.is_superuser and (payment.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
@@ -72,6 +76,8 @@ def read_payment(
         match charge.status:
             case "CONCLUIDA":
                 new_status = "paid"
+                book.active = True
+                session.add(book)
             case "REMOVIDA_PELO_USUARIO_RECEBEDOR" | "REMOVIDA_PELO_PSP":
                 new_status = "cancelled"
         # check if charge has expired

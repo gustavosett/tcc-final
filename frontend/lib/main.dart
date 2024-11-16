@@ -2193,36 +2193,54 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 8),
                 futureBookings.isEmpty
-                    ? const Text('Você não possui reservas futuras.')
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: futureBookings.length,
-                        itemBuilder: (context, index) {
-                          final book = futureBookings[index];
-                          String restaurantName =
-                              restaurantNames[book.restaurantId] ??
-                                  'Restaurante';
+                  ? const Text('Você não possui reservas futuras.')
+                  : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: futureBookings.length,
+                    itemBuilder: (context, index) {
+                      final book = futureBookings[index];
+                      String restaurantName =
+                        restaurantNames[book.restaurantId] ??
+                          'Restaurante';
 
-                          // Formatar data e hora
-                          String formattedDate = DateFormat('dd/MM/yyyy')
-                              .format(book.reservedFor.toLocal());
-                          String formattedTime = DateFormat('HH:mm')
-                              .format(book.reservedFor.toLocal());
+                      // Formatar data e hora
+                      String formattedDate = DateFormat('dd/MM/yyyy')
+                        .format(book.reservedFor.toLocal());
+                      String formattedTime = DateFormat('HH:mm')
+                        .format(book.reservedFor.toLocal());
 
-                          return Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.restaurant_menu),
-                              title: Text('Reserva no $restaurantName'),
-                              subtitle: Text(
-                                  'Às $formattedTime, dia $formattedDate, para ${book.peopleQuantity} pessoa(s)'),
-                              onTap: () {
-                                // Ação ao tocar na reserva
-                              },
-                            ),
-                          );
+                      return Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.restaurant_menu),
+                        title: Text('Reserva no $restaurantName'),
+                        subtitle: Text(
+                          'Às $formattedTime, dia $formattedDate, para ${book.peopleQuantity} pessoa(s)'),
+                        trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: book.active ? Colors.green[100] : Colors.orange[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          book.active ? 'Confirmada' : 'Pendente',
+                          style: TextStyle(
+                          color: book.active ? Colors.green[900] : Colors.orange[900],
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        ),
+                        onTap: () {
+                        // Ação ao tocar na reserva
                         },
                       ),
+                      );
+                    },
+                    ),
                 const SizedBox(height: 32),
                 // Lista de Restaurantes
                 const Text(
