@@ -1,6 +1,6 @@
 import uuid
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 from fastapi import APIRouter, HTTPException
@@ -66,11 +66,31 @@ def create_book(
     restaurant = session.get(Restaurant, book_in.restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    current_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
-    if current_utc > book_in.reserved_for:
+    
+    # definindo os fusos horários
+    fuso_sao_paulo = pytz.timezone('America/Sao_Paulo')
+    fuso_utc = pytz.utc
+
+    # obtendo o horário atual em UTC
+    current_utc = datetime.utcnow().replace(tzinfo=fuso_utc)
+
+    # convertendo o horário da reserva de São Paulo para UTC
+    book_time_sao_paulo = book_in.reserved_for.replace(tzinfo=fuso_sao_paulo)
+    book_time_utc = book_time_sao_paulo.astimezone(fuso_utc)
+
+    # verificando se a reserva é para um horário futuro
+    if current_utc > book_time_utc:
         raise HTTPException(
-            status_code=400, detail="Reservation date must be in the future"
+            status_code=400, detail="A reserva deve ser feita em um horário futuro"
         )
+    
+    # verificando se a reserva está sendo feita com pelo menos 2 horas de antecedência
+    diferenca_tempo = book_time_utc - current_utc
+    if diferenca_tempo < timedelta(hours=2):
+        raise HTTPException(
+            status_code=400, detail="A reserva deve ser feita com 2 horas de antecedência"
+        )
+    
     book = Book.model_validate(book_in, update={"owner_id": current_user.id})
     if restaurant.book_price <= 0:
         book.active = True
