@@ -4,6 +4,11 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // Para gerar QR Codes
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'dart:ui';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +16,10 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  final MaterialColor  primaryColor = Colors.deepPurple;
+  final Color accentColor = Colors.deepPurpleAccent;
+  final Color backgroundColor = Colors.white;
+
   const MyApp({super.key});
 
   static const String urlBackend = 'http://10.0.2.2:8000';
@@ -21,8 +30,29 @@ class MyApp extends StatelessWidget {
       title: 'MesApp',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.black,
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: primaryColor,
+          accentColor: accentColor,
+          backgroundColor: backgroundColor,
+        ),
+        appBarTheme: const AppBarTheme(
+          titleTextStyle: TextStyle(
+            color: Colors.white, // Define a cor do texto do título como branco
+            fontSize: 20,        // Define o tamanho da fonte, se desejar
+            fontWeight: FontWeight.bold, // Outros estilos opcionais
+          ),
+          iconTheme: IconThemeData(
+            color: Colors.white, // Define a cor dos ícones no AppBar como branco
+          ),
+          backgroundColor: Colors.deepPurple, // Define a cor de fundo do AppBar, se necessário
+          elevation: 0, // Remove a sombra abaixo do AppBar, se preferir
+        ),
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate
+      ],
+      supportedLocales: const [Locale('pt', 'BR')],
       home: const MyHomePage(title: 'MesApp'),
     );
   }
@@ -241,10 +271,10 @@ class RestaurantCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const RestaurantCard({
-    Key? key,
+    super.key,
     required this.restaurant,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -289,10 +319,10 @@ class RestaurantCard extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Avaliação e Endereço
-                  Row(
+                    ),
+                    const SizedBox(height: 4),
+                    // Avaliação e Endereço
+                    Row(
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
@@ -301,84 +331,84 @@ class RestaurantCard extends StatelessWidget {
                       const Icon(Icons.location_on, size: 16),
                       const SizedBox(width: 2),
                       Expanded(
-                        child: Text(
-                          restaurant.address,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      child: Text(
+                        restaurant.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Descrição
-                  Text(
+                    ),
+                    const SizedBox(height: 4),
+                    // Descrição
+                    Text(
                     restaurant.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
                   ),
+                ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+              ),
+            );
+            }
+          }
 
-class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
+          class SearchPage extends StatelessWidget {
+            const SearchPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(64.0),
-        child: Text(
-          'Parece que esta página ainda não foi implementada. 😅',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,),
-        ),
-      ),
-    );
-  }
-}
+            @override
+            Widget build(BuildContext context) {
+            return const Center(
+              child: Padding(
+              padding: EdgeInsets.all(64.0),
+              child: Text(
+                'Parece que esta página ainda não foi implementada. 😅',
+                style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,),
+              ),
+              ),
+            );
+            }
+          }
 
-// Modelos de Dados
+          // Modelos de Dados
 
-class Item {
-  final String restaurantId;
-  final String title;
-  final String description;
-  final String image;
-  final double rating;
-  final String id;
-  final String ownerId;
+          class Item {
+            final String restaurantId;
+            final String title;
+            final String description;
+            final String image;
+            final double rating;
+            final String id;
+            final String ownerId;
 
-  Item({
-    required this.restaurantId,
-    required this.title,
-    required this.description,
-    required this.image,
-    required this.rating,
-    required this.id,
-    required this.ownerId,
-  });
+            Item({
+            required this.restaurantId,
+            required this.title,
+            required this.description,
+            required this.image,
+            required this.rating,
+            required this.id,
+            required this.ownerId,
+            });
 
-  factory Item.fromJson(Map<String, dynamic> json) {
-    return Item(
-      restaurantId: json['restaurant_id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      image: json['image'] ?? '',
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      id: json['id'] ?? '',
-      ownerId: json['owner_id'] ?? '',
-    );
-  }
-}
+            factory Item.fromJson(Map<String, dynamic> json) {
+            return Item(
+              restaurantId: json['restaurant_id'] ?? '',
+              title: utf8.decode(json['title']?.toString().codeUnits ?? []),
+              description: utf8.decode(json['description']?.toString().codeUnits ?? []),
+              image: json['image'] ?? '',
+              rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+              id: json['id'] ?? '',
+              ownerId: json['owner_id'] ?? '',
+            );
+            }
+          }
 
 class User {
   final String email;
@@ -414,7 +444,7 @@ class User {
       cpf: json['cpf'] ?? '',
       isActive: json['is_active'] ?? false,
       isSuperuser: json['is_superuser'] ?? false,
-      fullName: json['full_name'],
+      fullName: json['full_name'] != null ? utf8.decode(json['full_name'].toString().codeUnits) : null,
       id: json['id'] ?? '',
       restaurants: restaurantList,
       books: bookList,
@@ -457,9 +487,9 @@ class Restaurant {
     List<Book> bookList = booksJson.map((i) => Book.fromJson(i)).toList();
 
     return Restaurant(
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      address: json['address'] ?? '',
+      name: utf8.decode(json['name']?.toString().codeUnits ?? []),
+      description: utf8.decode(json['description']?.toString().codeUnits ?? []),
+      address: utf8.decode(json['address']?.toString().codeUnits ?? []),
       phone: json['phone'] ?? '',
       image: json['image'] ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
@@ -472,11 +502,147 @@ class Restaurant {
   }
 }
 
+// Modelo Charge
+class Charge {
+  final String txid;
+  final Calendario calendario;
+  final int revisao;
+  final Loc loc;
+  final String location;
+  final String status;
+  final Devedor devedor;
+  final Valor valor;
+  final String chave;
+  final String solicitacaoPagador;
+  final String pixCopiaECola;
+
+  Charge({
+    required this.txid,
+    required this.calendario,
+    required this.revisao,
+    required this.loc,
+    required this.location,
+    required this.status,
+    required this.devedor,
+    required this.valor,
+    required this.chave,
+    required this.solicitacaoPagador,
+    required this.pixCopiaECola,
+  });
+
+  factory Charge.fromJson(Map<String, dynamic> json) {
+    return Charge(
+      txid: json['txid'] ?? '',
+      calendario: Calendario.fromJson(json['calendario']),
+      revisao: json['revisao'] ?? 0,
+      loc: Loc.fromJson(json['loc']),
+      location: json['location'] ?? '',
+      status: json['status'] ?? '',
+      devedor: Devedor.fromJson(json['devedor']),
+      valor: Valor.fromJson(json['valor']),
+      chave: json['chave'] ?? '',
+      solicitacaoPagador: utf8.decode((json['solicitacaoPagador'] ?? '').toString().codeUnits),
+      pixCopiaECola: utf8.decode((json['pixCopiaECola'] ?? '').toString().codeUnits),
+    );
+  }
+}
+
+class Calendario {
+  final String criacao;
+  final int expiracao;
+
+  Calendario({required this.criacao, required this.expiracao});
+
+  factory Calendario.fromJson(Map<String, dynamic> json) {
+    return Calendario(
+      criacao: json['criacao'] ?? '',
+      expiracao: json['expiracao'] ?? 0,
+    );
+  }
+}
+
+class Loc {
+  final int id;
+  final String location;
+  final String tipoCob;
+
+  Loc({required this.id, required this.location, required this.tipoCob});
+
+  factory Loc.fromJson(Map<String, dynamic> json) {
+    return Loc(
+      id: json['id'] ?? 0,
+      location: json['location'] ?? '',
+      tipoCob: json['tipoCob'] ?? '',
+    );
+  }
+}
+
+class Devedor {
+  final String? cnpj;
+  final String nome;
+
+  Devedor({this.cnpj, required this.nome});
+
+  factory Devedor.fromJson(Map<String, dynamic> json) {
+    return Devedor(
+      cnpj: json['cnpj'],
+      nome: json['nome'] ?? '',
+    );
+  }
+}
+
+class Valor {
+  final String original;
+
+  Valor({required this.original});
+
+  factory Valor.fromJson(Map<String, dynamic> json) {
+    return Valor(
+      original: json['original'] ?? '',
+    );
+  }
+}
+
+// Modelo Payment
+class Payment {
+  final String bookId;
+  final String ownerId;
+  final String paymentType;
+  final String id;
+  final double value;
+  final String status;
+  final DateTime createdAt;
+  final Charge? charge;
+
+  Payment({
+    required this.bookId,
+    required this.ownerId,
+    required this.paymentType,
+    required this.id,
+    required this.value,
+    required this.status,
+    required this.createdAt,
+    this.charge,
+  });
+
+  factory Payment.fromJson(Map<String, dynamic> json) {
+    return Payment(
+      bookId: json['book_id'] ?? '',
+      ownerId: json['owner_id'] ?? '',
+      paymentType: utf8.decode((json['payment_type'] ?? '').toString().codeUnits),
+      id: json['id'] ?? '',
+      value: (json['value'] as num?)?.toDouble() ?? 0.0,
+      status: utf8.decode((json['status'] ?? '').toString().codeUnits),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      charge: json['charge'] != null ? Charge.fromJson(json['charge']) : null,
+    );
+  }
+}
+
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  const RestaurantDetailPage({Key? key, required this.restaurant})
-      : super(key: key);
+  const RestaurantDetailPage({super.key, required this.restaurant});
 
   @override
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
@@ -550,6 +716,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         ),
       );
     } else {
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -559,9 +726,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryColor = Color.fromARGB(255, 183, 58, 58);
+
     if (isLoading) {
-      return Scaffold(
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -569,6 +738,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Erro'),
+          backgroundColor: primaryColor,
         ),
         body: Center(
           child: Text(
@@ -771,7 +941,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 class DishCard extends StatelessWidget {
   final Item item;
 
-  const DishCard({Key? key, required this.item}) : super(key: key);
+  const DishCard({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -779,7 +949,7 @@ class DishCard extends StatelessWidget {
       onTap: () {
         // Ação ao tocar no prato (pode exibir detalhes do prato)
       },
-      child: Container(
+      child: SizedBox(
         width: 160,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -869,7 +1039,7 @@ class Book {
 class BookingPage extends StatefulWidget {
   final String restaurantId;
 
-  const BookingPage({Key? key, required this.restaurantId}) : super(key: key);
+  const BookingPage({super.key, required this.restaurantId});
 
   @override
   _BookingPageState createState() => _BookingPageState();
@@ -883,12 +1053,20 @@ class _BookingPageState extends State<BookingPage> {
   String? errorMessage;
   Restaurant? restaurantDetails;
   String? accessToken;
+  TextEditingController _dateTimeController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadAccessToken();
     _fetchRestaurantDetails();
+    _dateTimeController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _dateTimeController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAccessToken() async {
@@ -953,7 +1131,7 @@ class _BookingPageState extends State<BookingPage> {
       return;
     }
 
-    final url = '${MyApp.urlBackend}/api/v1/books/';
+    const url = '${MyApp.urlBackend}/api/v1/books/';
 
     final body = jsonEncode({
       'restaurant_id': widget.restaurantId,
@@ -989,7 +1167,9 @@ class _BookingPageState extends State<BookingPage> {
         }
       } else {
         setState(() {
-          errorMessage = 'Erro ao fazer a reserva. Tente novamente.';
+          // errorMessage = 'Erro ao fazer a reserva. Tente novamente.';
+          // use error message instead:
+          errorMessage = response.statusCode == 400 ? utf8.decode(jsonDecode(response.body)['detail'].toString().codeUnits) : 'Erro ao fazer a reserva. Tente novamente.';
           isLoading = false;
         });
       }
@@ -1008,12 +1188,20 @@ class _BookingPageState extends State<BookingPage> {
       initialDate: now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
+      locale: const Locale('pt', 'BR'),
     );
 
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay(hour: 19, minute: 0),
+        initialTime: const TimeOfDay(hour: 19, minute: 0),
+        // use 24h format:
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
       );
 
       if (pickedTime != null) {
@@ -1025,6 +1213,8 @@ class _BookingPageState extends State<BookingPage> {
             pickedTime.hour,
             pickedTime.minute,
           );
+          _dateTimeController.text = DateFormat('dd/MM/yyyy HH:mm')
+              .format(_reservedFor!);
         });
       }
     }
@@ -1033,8 +1223,8 @@ class _BookingPageState extends State<BookingPage> {
   @override
   Widget build(BuildContext context) {
     if (restaurantDetails == null) {
-      return Scaffold(
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -1090,7 +1280,7 @@ class _BookingPageState extends State<BookingPage> {
                 children: [
                   // Nome do Restaurante
                   Text(
-                    'Reservar em ${restaurantDetails!.name}',
+                    'Reservar uma mesa em ${restaurantDetails!.name}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -1114,18 +1304,14 @@ class _BookingPageState extends State<BookingPage> {
                             onTap: _selectDateTime,
                             child: AbsorbPointer(
                               child: TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: _reservedFor == null
-                                      ? 'Data e Hora'
-                                      : 'Reservado para',
-                                  hintText: _reservedFor == null
-                                      ? 'Selecione a data e hora'
-                                      : DateFormat('dd/MM/yyyy HH:mm')
-                                          .format(_reservedFor!),
-                                  prefixIcon:
-                                      const Icon(Icons.calendar_today_outlined),
-                                  border: const OutlineInputBorder(),
+                                controller: _dateTimeController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Data e Hora',
+                                  prefixIcon: Icon(Icons.calendar_today_outlined),
+                                  border: OutlineInputBorder(),
                                 ),
+                                readOnly: true,
+                                onTap: _selectDateTime,
                                 validator: (value) {
                                   if (_reservedFor == null) {
                                     return 'Por favor, selecione a data e hora.';
@@ -1199,47 +1385,447 @@ class _BookingPageState extends State<BookingPage> {
   }
 }
 
-class PaymentPage extends StatelessWidget {
+class PaymentPage extends StatefulWidget {
   final Book book;
 
-  const PaymentPage({Key? key, required this.book}) : super(key: key);
+  const PaymentPage({super.key, required this.book});
+
+  @override
+  PaymentPageState createState() => PaymentPageState();
+}
+
+class PaymentPageState extends State<PaymentPage> with SingleTickerProviderStateMixin {
+  Payment? payment;
+  bool isLoading = true;
+  String? errorMessage;
+  String? accessToken;
+
+  // Timer
+  Timer? _timer;
+  int _secondsRemaining = 0;
+
+  // Controlador de animação para efeitos visuais
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessToken();
+
+    // Inicializa o controlador de animação
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancela o timer se não for nulo
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAccessToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      accessToken = prefs.getString('access_token');
+    });
+    _createPayment();
+  }
+
+  Future<void> _createPayment() async {
+    setState(() {
+      isLoading = true;
+      _secondsRemaining = 0;
+      errorMessage = null;
+    });
+
+    if (accessToken == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthPage()),
+      );
+      return;
+    }
+
+    const url = '${MyApp.urlBackend}/api/v1/payments/';
+
+    final body = jsonEncode({
+      'book_id': widget.book.id,
+      'owner_id': widget.book.ownerId,
+      'payment_type': 'pix',
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        Payment newPayment = Payment.fromJson(responseData);
+
+        setState(() {
+          payment = newPayment;
+          isLoading = false;
+          _startTimer();
+          _animationController.forward(); // Inicia a animação
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Erro ao criar pagamento. Tente novamente.';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erro de rede. Verifique sua conexão.';
+        isLoading = false;
+      });
+    }
+  }
+
+  void _startTimer() {
+    if (payment?.charge?.calendario.expiracao != null) {
+      DateTime creationTime = DateTime.parse(payment!.charge!.calendario.criacao);
+      int expirationSeconds = payment!.charge!.calendario.expiracao;
+
+      DateTime expirationTime = creationTime.add(Duration(seconds: expirationSeconds));
+      _secondsRemaining = expirationTime.difference(DateTime.now()).inSeconds;
+
+      if (_secondsRemaining <= 0) {
+        setState(() {
+          _secondsRemaining = 0;
+        });
+        return;
+      }
+
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_secondsRemaining > 0) {
+          setState(() {
+            _secondsRemaining--;
+          });
+        } else {
+          timer.cancel();
+          setState(() {
+            _secondsRemaining = 0;
+            // Aqui podemos atualizar a UI para refletir que o QR Code expirou
+          });
+        }
+      });
+    }
+  }
+
+  String _formatDuration(int totalSeconds) {
+    int minutes = totalSeconds ~/ 60;
+    int seconds = totalSeconds % 60;
+
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    if (payment == null) return;
+
+    final url = '${MyApp.urlBackend}/api/v1/payments/${payment!.id}';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'accept': 'application/json',
+          if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final status = responseData['status'];
+
+        if (status == 'cancelled') {
+          // Tempo esgotado para criar nova chave
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pagamento cancelado. Por favor, gere um novo QRCode.')),
+          );
+        } else if (status == 'paid') {
+          // Liberar usuário
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pagamento confirmado! Sua reserva foi agendada.')),
+          );
+          Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (status == 'pending') {
+          // Status pendente, manter o usuário na página
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pagamento ainda pendente. Aguarde a confirmação.')),
+          );
+        } else if (status == 'failed') {
+          // Mostrar mensagem para contato com suporte
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Falha no pagamento'),
+              content: const Text('Entre em contato com o suporte para resolver o problema.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // Status desconhecido
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Status de pagamento desconhecido. Tente novamente.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao verificar status do pagamento.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro de rede. Tente novamente mais tarde.')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    // Aqui você pode implementar a lógica de pagamento
-    // Para simplificar, vamos apenas exibir uma mensagem
+    // Paleta de cores personalizada
+    const Color primaryColor = Colors.deepPurple;
+    const Color accentColor = Colors.deepPurpleAccent;
+    const Color backgroundColor = Colors.white;
+
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          title: const Text('Pagamento'),
+          backgroundColor: primaryColor,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (errorMessage != null || payment == null || payment!.charge == null) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          title: const Text('Pagamento'),
+          backgroundColor: primaryColor,
+        ),
+        body: Center(
+          child: Text(
+            errorMessage ?? 'Erro desconhecido.',
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
+
+    final charge = payment!.charge!;
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Pagamento'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: const Text('Pagamento via Pix'),
+        backgroundColor: primaryColor,
+        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'Pagamento Necessário',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+            // Título
             Text(
-              'Sua reserva para ${book.peopleQuantity} pessoas em ${DateFormat('dd/MM/yyyy HH:mm').format(book.reservedFor.toLocal())} requer pagamento.',
-              style: const TextStyle(fontSize: 16),
+              'Confirme sua reserva com uma taxa de R\$${charge.valor.original}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Escaneie o QR Code ou copie o código abaixo',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Timer
+            if (_secondsRemaining > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Expira em: ${_formatDuration(_secondsRemaining)}',
+                  style: const TextStyle(fontSize: 16, color: Colors.redAccent),
+                ),
+              ),
+            const SizedBox(height: 24),
+            // QR Code com estilo personalizado e animação
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: _animationController,
+                    curve: Curves.easeOutBack,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey[300]!,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: QrImageView(
+                      data: charge.pixCopiaECola,
+                      version: QrVersions.auto,
+                      size: 250.0,
+                      gapless: false,
+                      // Logo centralizado no QR Code
+                      embeddedImage: const AssetImage('assets/logo-center-qrcode.png'), // Certifique-se de ter esse asset
+                      embeddedImageStyle: const QrEmbeddedImageStyle(
+                        size: Size(55, 55),
+                      ),
+                    ),
+                  ),
+                ),
+                // Efeito de desfoque quando o tempo expira
+                if (_secondsRemaining == 0)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                      child: Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.lock_outline,
+                            color: Color.fromARGB(255, 0, 0, 0),
+                            size: 50,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Botão para copiar código ou gerar novo QR Code
+            ElevatedButton.icon(
+              onPressed: _secondsRemaining > 0
+                  ? () {
+                      Clipboard.setData(ClipboardData(text: charge.pixCopiaECola));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Código copiado para a área de transferência'),
+                        ),
+                      );
+                    }
+                  : () {
+                      // Gerar novo QR Code
+                      _createPayment();
+                    },
+              icon: Icon(_secondsRemaining > 0 ? Icons.copy : Icons.refresh),
+              label: Text(_secondsRemaining > 0 ? 'Copiar código Pix' : 'Gerar novo QR Code'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 5,
+                shadowColor: Colors.grey[50],
+              ),
             ),
             const SizedBox(height: 16),
+            // Código Copia e Cola ou mensagem quando expirado
+            Expanded(
+              child: SingleChildScrollView(
+                child: _secondsRemaining > 0
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: SelectableText(
+                          charge.pixCopiaECola,
+                          style: const TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : Text(
+                        'O tempo para o pagamento expirou. Por favor, gere um novo QR Code.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Instruções adicionais
+            Text(
+              'Após o pagamento, a confirmação será automática.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Botão para verificar o status do pagamento
             ElevatedButton(
-              onPressed: () {
-                // Implementar lógica de pagamento aqui
-                // Após o pagamento, você pode atualizar o estado da reserva
-
-                // Por agora, vamos simular o pagamento e voltar para a página inicial
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Pagamento realizado com sucesso!')),
-                );
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              child: const Text('Pagar Agora'),
+              onPressed: _checkPaymentStatus,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 5,
+                shadowColor: Colors.grey[50],
+              ),
+              child: const Text('Já paguei'),
             ),
           ],
         ),
@@ -1296,7 +1882,7 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
 
-    final url = '${MyApp.urlBackend}/api/v1/users/me';
+    const url = '${MyApp.urlBackend}/api/v1/users/me';
 
     try {
       final response = await http.get(
@@ -1484,7 +2070,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 8),
                 user!.restaurants.isEmpty
-                    ? const Text('Você ainda não possui restaurantes.')
+                    ? const Text('Você não possui restaurantes.')
                     : ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -1593,7 +2179,7 @@ class _SignupFormState extends State<SignupForm> {
       errorMessage = null;
     });
 
-    final url = '${MyApp.urlBackend}/api/v1/users/signup';
+    const url = '${MyApp.urlBackend}/api/v1/users/signup';
 
     final body = jsonEncode({
       'email': _emailController.text,
@@ -1611,6 +2197,7 @@ class _SignupFormState extends State<SignupForm> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registro realizado com sucesso!')),
         );
@@ -1741,10 +2328,10 @@ class LoginForm extends StatefulWidget {
   const LoginForm({super.key, required this.toggleForm});
 
   @override
-  _LoginFormState createState() => _LoginFormState();
+  LoginFormState createState() => LoginFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController(); // Email
   final _passwordController = TextEditingController();
@@ -1760,7 +2347,7 @@ class _LoginFormState extends State<LoginForm> {
       errorMessage = null;
     });
 
-    final url = '${MyApp.urlBackend}/api/v1/login/access-token';
+    const url = '${MyApp.urlBackend}/api/v1/login/access-token';
 
     final body = {
       'username': _usernameController.text,
@@ -1774,6 +2361,8 @@ class _LoginFormState extends State<LoginForm> {
         body: body,
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         String accessToken = responseData['access_token'];
@@ -1784,7 +2373,9 @@ class _LoginFormState extends State<LoginForm> {
         setState(() {
           isLoading = false;
         });
-
+        
+        if (!mounted) return;
+        
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MyHomePage(title: 'MesApp')),
         );
