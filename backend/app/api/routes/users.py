@@ -15,6 +15,7 @@ from app.core.security import get_password_hash, verify_password
 from app.models import (
     Item,
     Message,
+    Payment,
     UpdatePassword,
     User,
     UserCreate,
@@ -125,10 +126,19 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserMe)
-def read_user_me(current_user: CurrentUser) -> Any:
+def read_user_me(current_user: CurrentUser, session: SessionDep) -> Any:
     """
     Get current user.
     """
+    for book in current_user.books:
+        if not book.active:
+            book_payments = session.exec(select(Payment).where(Payment.book_id == book.id)).all()
+            for payment in book_payments:
+                if payment.status == "paid":
+                    book.active = True
+                    session.add(book)
+                    session.commit()
+                    session.refresh(book)
     return current_user
 
 
