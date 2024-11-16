@@ -16,7 +16,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final MaterialColor  primaryColor = Colors.deepPurple;
+  final MaterialColor primaryColor = Colors.deepPurple;
   final Color accentColor = Colors.deepPurpleAccent;
   final Color backgroundColor = Colors.white;
 
@@ -38,13 +38,15 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
             color: Colors.white, // Define a cor do texto do título como branco
-            fontSize: 20,        // Define o tamanho da fonte, se desejar
+            fontSize: 20, // Define o tamanho da fonte, se desejar
             fontWeight: FontWeight.bold, // Outros estilos opcionais
           ),
           iconTheme: IconThemeData(
-            color: Colors.white, // Define a cor dos ícones no AppBar como branco
+            color:
+                Colors.white, // Define a cor dos ícones no AppBar como branco
           ),
-          backgroundColor: Colors.deepPurple, // Define a cor de fundo do AppBar, se necessário
+          backgroundColor: Colors
+              .deepPurple, // Define a cor de fundo do AppBar, se necessário
           elevation: 0, // Remove a sombra abaixo do AppBar, se preferir
         ),
       ),
@@ -213,18 +215,18 @@ class HomePageState extends State<HomePage> {
       );
     }
 
-  return RefreshIndicator(
-    onRefresh: _refreshRestaurants,
-    child: NotificationListener<ScrollNotification>(
-      onNotification: (ScrollNotification scrollInfo) {
-        if (!isLoading &&
-            hasMore &&
-            scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - 200) {
-          _fetchRestaurants();
-        }
-        return false;
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshRestaurants,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (!isLoading &&
+              hasMore &&
+              scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+            _fetchRestaurants();
+          }
+          return false;
+        },
         child: Column(
           children: [
             Expanded(
@@ -242,7 +244,7 @@ class HomePageState extends State<HomePage> {
                   if (index == restaurants.length) {
                     return const Center(child: CircularProgressIndicator());
                   }
-              
+
                   final restaurant = restaurants[index];
                   return RestaurantCard(
                     restaurant: restaurant,
@@ -303,7 +305,8 @@ class RestaurantCard extends StatelessWidget {
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[300],
-                  child: const Icon(Icons.restaurant, color: Colors.grey, size: 80),
+                  child: const Icon(Icons.restaurant,
+                      color: Colors.grey, size: 80),
                 ),
               ),
             ),
@@ -319,10 +322,10 @@ class RestaurantCard extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Avaliação e Endereço
-                    Row(
+                  ),
+                  const SizedBox(height: 4),
+                  // Avaliação e Endereço
+                  Row(
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
@@ -331,84 +334,85 @@ class RestaurantCard extends StatelessWidget {
                       const Icon(Icons.location_on, size: 16),
                       const SizedBox(width: 2),
                       Expanded(
-                      child: Text(
-                        restaurant.address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        child: Text(
+                          restaurant.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
-                    ),
-                    const SizedBox(height: 4),
-                    // Descrição
-                    Text(
+                  ),
+                  const SizedBox(height: 4),
+                  // Descrição
+                  Text(
                     restaurant.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
                   ),
-                ),
                 ],
               ),
-              ),
-            );
-            }
-          }
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          class SearchPage extends StatelessWidget {
-            const SearchPage({super.key});
+class SearchPage extends StatelessWidget {
+  const SearchPage({super.key});
 
-            @override
-            Widget build(BuildContext context) {
-            return const Center(
-              child: Padding(
-              padding: EdgeInsets.all(64.0),
-              child: Text(
-                'Parece que esta página ainda não foi implementada. 😅',
-                style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,),
-              ),
-              ),
-            );
-            }
-          }
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(64.0),
+        child: Text(
+          'Parece que esta página ainda não foi implementada. 😅',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-          // Modelos de Dados
+// Modelos de Dados
 
-          class Item {
-            final String restaurantId;
-            final String title;
-            final String description;
-            final String image;
-            final double rating;
-            final String id;
-            final String ownerId;
+class Item {
+  final String restaurantId;
+  final String title;
+  final String description;
+  final String image;
+  final double rating;
+  final String id;
+  final String ownerId;
 
-            Item({
-            required this.restaurantId,
-            required this.title,
-            required this.description,
-            required this.image,
-            required this.rating,
-            required this.id,
-            required this.ownerId,
-            });
+  Item({
+    required this.restaurantId,
+    required this.title,
+    required this.description,
+    required this.image,
+    required this.rating,
+    required this.id,
+    required this.ownerId,
+  });
 
-            factory Item.fromJson(Map<String, dynamic> json) {
-            return Item(
-              restaurantId: json['restaurant_id'] ?? '',
-              title: utf8.decode(json['title']?.toString().codeUnits ?? []),
-              description: utf8.decode(json['description']?.toString().codeUnits ?? []),
-              image: json['image'] ?? '',
-              rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-              id: json['id'] ?? '',
-              ownerId: json['owner_id'] ?? '',
-            );
-            }
-          }
+  factory Item.fromJson(Map<String, dynamic> json) {
+    return Item(
+      restaurantId: json['restaurant_id'] ?? '',
+      title: utf8.decode(json['title']?.toString().codeUnits ?? []),
+      description: utf8.decode(json['description']?.toString().codeUnits ?? []),
+      image: json['image'] ?? '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      id: json['id'] ?? '',
+      ownerId: json['owner_id'] ?? '',
+    );
+  }
+}
 
 class User {
   final String email;
@@ -444,7 +448,9 @@ class User {
       cpf: json['cpf'] ?? '',
       isActive: json['is_active'] ?? false,
       isSuperuser: json['is_superuser'] ?? false,
-      fullName: json['full_name'] != null ? utf8.decode(json['full_name'].toString().codeUnits) : null,
+      fullName: json['full_name'] != null
+          ? utf8.decode(json['full_name'].toString().codeUnits)
+          : null,
       id: json['id'] ?? '',
       restaurants: restaurantList,
       books: bookList,
@@ -541,8 +547,10 @@ class Charge {
       devedor: Devedor.fromJson(json['devedor']),
       valor: Valor.fromJson(json['valor']),
       chave: json['chave'] ?? '',
-      solicitacaoPagador: utf8.decode((json['solicitacaoPagador'] ?? '').toString().codeUnits),
-      pixCopiaECola: utf8.decode((json['pixCopiaECola'] ?? '').toString().codeUnits),
+      solicitacaoPagador:
+          utf8.decode((json['solicitacaoPagador'] ?? '').toString().codeUnits),
+      pixCopiaECola:
+          utf8.decode((json['pixCopiaECola'] ?? '').toString().codeUnits),
     );
   }
 }
@@ -629,7 +637,8 @@ class Payment {
     return Payment(
       bookId: json['book_id'] ?? '',
       ownerId: json['owner_id'] ?? '',
-      paymentType: utf8.decode((json['payment_type'] ?? '').toString().codeUnits),
+      paymentType:
+          utf8.decode((json['payment_type'] ?? '').toString().codeUnits),
       id: json['id'] ?? '',
       value: (json['value'] as num?)?.toDouble() ?? 0.0,
       status: utf8.decode((json['status'] ?? '').toString().codeUnits),
@@ -711,8 +720,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              BookingPage(restaurantId: widget.restaurant.id),
+          builder: (context) => BookingPage(restaurantId: widget.restaurant.id),
         ),
       );
     } else {
@@ -754,7 +762,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     return Scaffold(
       extendBodyBehindAppBar: true, // Permite que o corpo fique atrás da AppBar
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Transparente para sobrepor a imagem
+        backgroundColor:
+            Colors.transparent, // Transparente para sobrepor a imagem
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white), // Ícones brancos
       ),
@@ -782,7 +791,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     width: double.infinity,
                     height: 300,
                     color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant, color: Colors.grey, size: 100),
+                    child: const Icon(Icons.restaurant,
+                        color: Colors.grey, size: 100),
                   ),
                 ),
                 // Gradiente para melhorar a legibilidade do texto
@@ -974,7 +984,8 @@ class DishCard extends StatelessWidget {
                   width: 160,
                   height: 120,
                   color: Colors.grey[300],
-                  child: const Icon(Icons.fastfood, color: Colors.grey, size: 50),
+                  child:
+                      const Icon(Icons.fastfood, color: Colors.grey, size: 50),
                 ),
               ),
             ),
@@ -1030,8 +1041,7 @@ class Book {
       id: json['id'] ?? '',
       ownerId: json['owner_id'] ?? '',
       active: json['active'] ?? false,
-      createdAt:
-          DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -1169,7 +1179,10 @@ class _BookingPageState extends State<BookingPage> {
         setState(() {
           // errorMessage = 'Erro ao fazer a reserva. Tente novamente.';
           // use error message instead:
-          errorMessage = response.statusCode == 400 ? utf8.decode(jsonDecode(response.body)['detail'].toString().codeUnits) : 'Erro ao fazer a reserva. Tente novamente.';
+          errorMessage = response.statusCode == 400
+              ? utf8.decode(
+                  jsonDecode(response.body)['detail'].toString().codeUnits)
+              : 'Erro ao fazer a reserva. Tente novamente.';
           isLoading = false;
         });
       }
@@ -1213,8 +1226,8 @@ class _BookingPageState extends State<BookingPage> {
             pickedTime.hour,
             pickedTime.minute,
           );
-          _dateTimeController.text = DateFormat('dd/MM/yyyy HH:mm')
-              .format(_reservedFor!);
+          _dateTimeController.text =
+              DateFormat('dd/MM/yyyy HH:mm').format(_reservedFor!);
         });
       }
     }
@@ -1255,7 +1268,8 @@ class _BookingPageState extends State<BookingPage> {
               width: double.infinity,
               height: double.infinity,
               color: Colors.grey[300],
-              child: const Icon(Icons.restaurant, color: Colors.grey, size: 100),
+              child:
+                  const Icon(Icons.restaurant, color: Colors.grey, size: 100),
             ),
           ),
           // Gradiente
@@ -1307,7 +1321,8 @@ class _BookingPageState extends State<BookingPage> {
                                 controller: _dateTimeController,
                                 decoration: const InputDecoration(
                                   labelText: 'Data e Hora',
-                                  prefixIcon: Icon(Icons.calendar_today_outlined),
+                                  prefixIcon:
+                                      Icon(Icons.calendar_today_outlined),
                                   border: OutlineInputBorder(),
                                 ),
                                 readOnly: true,
@@ -1361,7 +1376,8 @@ class _BookingPageState extends State<BookingPage> {
                             child: ElevatedButton(
                               onPressed: isLoading ? null : _submitBooking,
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 textStyle: const TextStyle(fontSize: 18),
                               ),
                               child: isLoading
@@ -1394,7 +1410,8 @@ class PaymentPage extends StatefulWidget {
   PaymentPageState createState() => PaymentPageState();
 }
 
-class PaymentPageState extends State<PaymentPage> with SingleTickerProviderStateMixin {
+class PaymentPageState extends State<PaymentPage>
+    with SingleTickerProviderStateMixin {
   Payment? payment;
   bool isLoading = true;
   String? errorMessage;
@@ -1494,10 +1511,12 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
 
   void _startTimer() {
     if (payment?.charge?.calendario.expiracao != null) {
-      DateTime creationTime = DateTime.parse(payment!.charge!.calendario.criacao);
+      DateTime creationTime =
+          DateTime.parse(payment!.charge!.calendario.criacao);
       int expirationSeconds = payment!.charge!.calendario.expiracao;
 
-      DateTime expirationTime = creationTime.add(Duration(seconds: expirationSeconds));
+      DateTime expirationTime =
+          creationTime.add(Duration(seconds: expirationSeconds));
       _secondsRemaining = expirationTime.difference(DateTime.now()).inSeconds;
 
       if (_secondsRemaining <= 0) {
@@ -1551,18 +1570,24 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
         if (status == 'cancelled') {
           // Tempo esgotado para criar nova chave
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pagamento cancelado. Por favor, gere um novo QRCode.')),
+            const SnackBar(
+                content: Text(
+                    'Pagamento cancelado. Por favor, gere um novo QRCode.')),
           );
         } else if (status == 'paid') {
           // Liberar usuário
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pagamento confirmado! Sua reserva foi agendada.')),
+            const SnackBar(
+                content:
+                    Text('Pagamento confirmado! Sua reserva foi agendada.')),
           );
           Navigator.popUntil(context, (route) => route.isFirst);
         } else if (status == 'pending') {
           // Status pendente, manter o usuário na página
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pagamento ainda pendente. Aguarde a confirmação.')),
+            const SnackBar(
+                content:
+                    Text('Pagamento ainda pendente. Aguarde a confirmação.')),
           );
         } else if (status == 'failed') {
           // Mostrar mensagem para contato com suporte
@@ -1570,7 +1595,8 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Falha no pagamento'),
-              content: const Text('Entre em contato com o suporte para resolver o problema.'),
+              content: const Text(
+                  'Entre em contato com o suporte para resolver o problema.'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -1584,21 +1610,24 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
         } else {
           // Status desconhecido
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Status de pagamento desconhecido. Tente novamente.')),
+            const SnackBar(
+                content:
+                    Text('Status de pagamento desconhecido. Tente novamente.')),
           );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao verificar status do pagamento.')),
+          const SnackBar(
+              content: Text('Erro ao verificar status do pagamento.')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro de rede. Tente novamente mais tarde.')),
+        const SnackBar(
+            content: Text('Erro de rede. Tente novamente mais tarde.')),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1671,7 +1700,8 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
             // Timer
             if (_secondsRemaining > 0)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.redAccent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -1711,7 +1741,8 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
                       size: 250.0,
                       gapless: false,
                       // Logo centralizado no QR Code
-                      embeddedImage: const AssetImage('assets/logo-center-qrcode.png'), // Certifique-se de ter esse asset
+                      embeddedImage: const AssetImage(
+                          'assets/logo-center-qrcode.png'), // Certifique-se de ter esse asset
                       embeddedImageStyle: const QrEmbeddedImageStyle(
                         size: Size(55, 55),
                       ),
@@ -1747,10 +1778,12 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
             ElevatedButton.icon(
               onPressed: _secondsRemaining > 0
                   ? () {
-                      Clipboard.setData(ClipboardData(text: charge.pixCopiaECola));
+                      Clipboard.setData(
+                          ClipboardData(text: charge.pixCopiaECola));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Código copiado para a área de transferência'),
+                          content: Text(
+                              'Código copiado para a área de transferência'),
                         ),
                       );
                     }
@@ -1759,11 +1792,14 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
                       _createPayment();
                     },
               icon: Icon(_secondsRemaining > 0 ? Icons.copy : Icons.refresh),
-              label: Text(_secondsRemaining > 0 ? 'Copiar código Pix' : 'Gerar novo QR Code'),
+              label: Text(_secondsRemaining > 0
+                  ? 'Copiar código Pix'
+                  : 'Gerar novo QR Code'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 textStyle: const TextStyle(fontSize: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1817,8 +1853,10 @@ class PaymentPageState extends State<PaymentPage> with SingleTickerProviderState
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -2026,7 +2064,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Saudação Simplificada
                 Text(
                   'Olá, $firstName!',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 24),
                 // Lista de Reservas Futuras
@@ -2043,11 +2082,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         itemCount: futureBookings.length,
                         itemBuilder: (context, index) {
                           final book = futureBookings[index];
-                          String restaurantName = restaurantNames[book.restaurantId] ?? 'Restaurante';
+                          String restaurantName =
+                              restaurantNames[book.restaurantId] ??
+                                  'Restaurante';
 
                           // Formatar data e hora
-                          String formattedDate = DateFormat('dd/MM/yyyy').format(book.reservedFor.toLocal());
-                          String formattedTime = DateFormat('HH:mm').format(book.reservedFor.toLocal());
+                          String formattedDate = DateFormat('dd/MM/yyyy')
+                              .format(book.reservedFor.toLocal());
+                          String formattedTime = DateFormat('HH:mm')
+                              .format(book.reservedFor.toLocal());
 
                           return Card(
                             child: ListTile(
@@ -2090,8 +2133,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   width: 50,
                                   height: 50,
                                   color: Colors.grey[200],
-                                  child:
-                                      const Center(child: CircularProgressIndicator()),
+                                  child: const Center(
+                                      child: CircularProgressIndicator()),
                                 ),
                                 errorWidget: (context, url, error) =>
                                     const Icon(Icons.restaurant),
@@ -2253,8 +2296,7 @@ class _SignupFormState extends State<SignupForm> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu email';
                       }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                          .hasMatch(value)) {
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                         return 'Por favor, insira um email válido';
                       }
                       return null;
@@ -2373,11 +2415,12 @@ class LoginFormState extends State<LoginForm> {
         setState(() {
           isLoading = false;
         });
-        
+
         if (!mounted) return;
-        
+
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MyHomePage(title: 'MesApp')),
+          MaterialPageRoute(
+              builder: (context) => const MyHomePage(title: 'MesApp')),
         );
       } else if (response.statusCode == 400) {
         final responseData = jsonDecode(response.body);
@@ -2429,8 +2472,7 @@ class LoginFormState extends State<LoginForm> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu email';
                       }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                          .hasMatch(value)) {
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                         return 'Por favor, insira um email válido';
                       }
                       return null;
