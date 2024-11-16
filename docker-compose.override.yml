@@ -46,7 +46,3 @@ services:
       - "1080:1080"
       - "1025:1025"
 
-networks:
-  traefik-public:
-    # For local dev, don't expect an external Traefik network
-    external: false

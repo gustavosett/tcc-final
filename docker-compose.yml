@@ -27,7 +27,6 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - traefik-public
       - default
     depends_on:
       - db
@@ -39,7 +38,6 @@ services:
     build:
       context: ./backend
     networks:
-      - traefik-public
       - default
     depends_on:
       db:
@@ -77,7 +75,6 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - traefik-public
       - default
     depends_on:
       db:
@@ -122,7 +119,3 @@ services:
 volumes:
   app-db-data:
 
-networks:
-  traefik-public:
-    # Allow setting it to false for testing
-    external: true
