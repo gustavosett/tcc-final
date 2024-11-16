@@ -360,22 +360,140 @@ class RestaurantCard extends StatelessWidget {
   }
 }
 
-class SearchPage extends StatelessWidget {
+class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
   @override
+  SearchPageState createState() => SearchPageState();
+}
+
+class SearchPageState extends State<SearchPage> {
+  List<Restaurant> restaurants = [];
+  bool isLoading = false;
+  String? errorMessage;
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _searchRestaurants(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        restaurants = [];
+        errorMessage = null;
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    final encodedQuery = Uri.encodeComponent(query);
+    final url = '${MyApp.urlBackend}/api/v1/restaurants/search?query=$encodedQuery&skip=0&limit=100';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        List<dynamic> data = responseData['data'] as List<dynamic>;
+        
+        setState(() {
+          restaurants = data.map((item) => Restaurant.fromJson(item)).toList();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Erro ao buscar restaurantes. Tente novamente.';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erro de rede. Verifique sua conexão.';
+        isLoading = false;
+      });
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _searchRestaurants(query);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(64.0),
-        child: Text(
-          'Parece que esta página ainda não foi implementada. 😅',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Buscar restaurantes...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
           ),
         ),
-      ),
+        Expanded(
+          child: isLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage != null
+              ? Center(child: Text(errorMessage!, style: const TextStyle(color: Colors.red)))
+              : restaurants.isEmpty
+                ? const Center(child: Text(
+                  'Nenhum restaurante encontrado. 😅',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    ),
+                ))
+                : GridView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemCount: restaurants.length,
+                    itemBuilder: (context, index) {
+                      return RestaurantCard(
+                        restaurant: restaurants[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RestaurantDetailPage(
+                                restaurant: restaurants[index],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+        ),
+      ],
     );
   }
 }
