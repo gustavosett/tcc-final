@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
 
   const MyApp({super.key});
 
-  static const String urlBackend = 'http://10.0.2.2:8000';
+  static const String urlBackend = 'http://192.168.0.4:8000';
 
   @override
   Widget build(BuildContext context) {
@@ -1251,14 +1251,6 @@ class _BookingPageState extends State<BookingPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('access_token');
 
-    if (accessToken == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AuthPage()),
-      );
-      return;
-    }
-
     const url = '${MyApp.urlBackend}/api/v1/books/';
 
     final body = jsonEncode({
@@ -2015,13 +2007,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadAccessTokenAndFetchProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('access_token');
-
-    if (token == null) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
 
     setState(() {
       accessToken = token;
